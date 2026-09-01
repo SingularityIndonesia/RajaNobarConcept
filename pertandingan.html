@@ -309,6 +309,61 @@
     margin: 0 1rem 1.2rem;
   }
 
+  /* ---------- Login bottom sheet ---------- */
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 18, 9, 0.6);
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .sheet-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .login-sheet {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 100%);
+    width: 100%;
+    max-width: 480px;
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 1.4rem 1.4rem 0 0;
+    padding: 0.8rem 1.4rem calc(1.6rem + var(--safe-b));
+    z-index: 21;
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    text-align: center;
+  }
+  .sheet-overlay.open .login-sheet { transform: translate(-50%, 0); }
+
+  .login-sheet .grabber {
+    width: 2.4rem; height: 0.28rem;
+    background: var(--line);
+    border-radius: 999px;
+    margin: 0.4rem auto 1.3rem;
+  }
+  .login-sheet h2 { font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; }
+  .login-sheet p {
+    font-size: 0.88rem; color: var(--ink-muted);
+    margin: 0 0 1.6rem;
+  }
+  .google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    padding: 0.85rem 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    background: var(--paper);
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
   /* ---------- Bottom tab bar ---------- */
   .tab-bar {
     position: fixed;
@@ -362,14 +417,6 @@
   <a href="#">F1<span class="soon">soon</span></a>
 </nav>
 
-<div class="ticker">
-  <div class="ticker-track">
-    <span class="hot">Semi Final AFF sudah dimulai!</span>
-    <span>Siapa yang membawa pulang Piala AFF 2026?</span>
-    <span class="hot">Semi Final AFF sudah dimulai!</span>
-    <span>Siapa yang membawa pulang Piala AFF 2026?</span>
-  </div>
-</div>
 
 <section class="page-head">
   <h1>Pertandingan</h1>
@@ -427,10 +474,10 @@
         <h3>Chelsea FC vs AC Milan</h3>
         <div class="datetime">Sab, 08 Agu &middot; 19.00</div>
       </div>
-      <a class="vote-btn" href="vote.html">
+      <button class="vote-btn" type="button" data-open-login data-vote-target="vote.html">
         Vote Now
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
+      </button>
     </div>
   </div>
 </section>
@@ -442,6 +489,23 @@
 <section class="match-section" data-panel="league-empty" hidden>
   <div class="empty-state">Belum ada pertandingan untuk liga ini.</div>
 </section>
+
+<div class="sheet-overlay" data-login-overlay>
+  <div class="login-sheet">
+    <div class="grabber"></div>
+    <h2>Login to Continue</h2>
+    <p>Masuk untuk memberikan vote pada pertandingan ini.</p>
+    <button class="google-btn" type="button" data-login-google>
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 009 18z"/>
+        <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.66 9c0-.59.1-1.17.29-1.7V4.97H.9A9 9 0 000 9c0 1.45.35 2.83.9 4.03l3.05-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.9 4.97l3.05 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+      </svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
 
 <script>
   (function () {
@@ -485,6 +549,25 @@
         render();
       });
     });
+
+    var overlay = document.querySelector('[data-login-overlay]');
+    var googleBtn = document.querySelector('[data-login-google]');
+    var voteTarget = 'vote.html';
+
+    document.querySelectorAll('[data-open-login]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        voteTarget = btn.getAttribute('data-vote-target') || 'vote.html';
+        overlay.classList.add('open');
+      });
+    });
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+
+    googleBtn.addEventListener('click', function () {
+      window.location.href = voteTarget;
+    });
   })();
 </script>
 
@@ -505,7 +588,7 @@
     <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 20V10M12 20V4M20 20v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     Leaderboard
   </a>
-  <a href="#">
+  <a href="club.html">
     <svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="8" r="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M16 14.2c2.9.4 5 2.5 5 5.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     Klub
   </a>
