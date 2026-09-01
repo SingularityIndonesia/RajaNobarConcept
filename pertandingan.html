@@ -127,6 +127,32 @@
   .page-head { padding: 1.3rem 1rem 0; }
   .page-head h1 { font-size: 1.7rem; font-weight: 800; margin: 0; }
 
+  /* ---------- League tabs ---------- */
+  .league-tabs {
+    display: flex;
+    gap: 0.6rem;
+    padding: 1rem 1rem 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .league-tabs::-webkit-scrollbar { display: none; }
+  .league-tabs a {
+    flex: none;
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.8rem; font-weight: 700;
+    padding: 0.4rem 0.9rem 0.4rem 0.4rem;
+    border-radius: 999px;
+    background: rgba(242, 247, 241, 0.06);
+    color: #b9c8bd;
+    border: 1px solid var(--nav-line);
+    white-space: nowrap;
+  }
+  .league-tabs a img {
+    width: 1.7rem; height: 1.7rem; border-radius: 50%;
+    object-fit: cover; background: #fff;
+  }
+  .league-tabs a.active { background: #f2f7f1; color: var(--ink); border-color: #f2f7f1; }
+
   /* ---------- Filter tabs ---------- */
   .filter-tabs {
     display: flex;
@@ -246,7 +272,13 @@
     padding: 0.55rem 1rem;
   }
 
-  .match-card-foot { padding: 0.9rem 1rem 1.05rem; }
+  .match-card-foot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.9rem 1rem 1.05rem;
+  }
   .match-card-foot .tag {
     font-size: 0.66rem; font-weight: 800; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--ink-muted);
@@ -254,6 +286,18 @@
   }
   .match-card-foot h3 { font-size: 1.02rem; font-weight: 800; margin: 0 0 0.3rem; }
   .match-card-foot .datetime { font-size: 0.82rem; color: var(--ink-muted); }
+  .vote-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: var(--red);
+    color: #fff;
+    font-size: 0.78rem; font-weight: 800;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    border: none;
+  }
 
   .empty-state {
     text-align: center;
@@ -331,6 +375,21 @@
   <h1>Pertandingan</h1>
 </section>
 
+<nav class="league-tabs">
+  <a class="active" href="#" data-league="isc">
+    <img src="images/season-indonesia-super-cup.jpg" alt="" />
+    Indonesia Super Cup 2026
+  </a>
+  <a href="#" data-league="aff">
+    <img src="images/season-aff-hyundai-cup.png" alt="" />
+    AFF Hyundai Cup 2026
+  </a>
+  <a href="#" data-league="fifa">
+    <img src="images/season-fifa-world-cup.avif" alt="" />
+    FIFA World Cup 2026
+  </a>
+</nav>
+
 <nav class="filter-tabs">
   <a class="active" href="#semua" data-filter="semua">Semua</a>
   <a href="#langsung" data-filter="langsung">Langsung</a>
@@ -344,7 +403,7 @@
     <span class="count">&middot; 1 pertandingan</span>
   </div>
 
-  <a class="match-card" href="#">
+  <div class="match-card">
     <div class="match-card-top">
       <span class="match-status">Selesai</span>
       <div class="match-competition"><b>Indonesia Super Cup 2026</b></div>
@@ -363,33 +422,67 @@
     <span class="match-banner">Gunakan Double Point</span>
     <span class="match-points">1.999.999.999 Poin</span>
     <div class="match-card-foot">
-      <div class="tag">Final</div>
-      <h3>Chelsea FC vs AC Milan</h3>
-      <div class="datetime">Sab, 08 Agu &middot; 19.00</div>
+      <div>
+        <div class="tag">Final</div>
+        <h3>Chelsea FC vs AC Milan</h3>
+        <div class="datetime">Sab, 08 Agu &middot; 19.00</div>
+      </div>
+      <a class="vote-btn" href="vote.html">
+        Vote Now
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
     </div>
-  </a>
+  </div>
 </section>
 
 <section class="match-section" data-panel="langsung" hidden>
   <div class="empty-state">Belum ada pertandingan yang sedang berlangsung.</div>
 </section>
 
+<section class="match-section" data-panel="league-empty" hidden>
+  <div class="empty-state">Belum ada pertandingan untuk liga ini.</div>
+</section>
+
 <script>
   (function () {
     var tabs = document.querySelectorAll('.filter-tabs a');
-    var panels = { semua: document.querySelector('[data-panel="semua"]') };
-
+    var leagueTabs = document.querySelectorAll('.league-tabs a');
+    var semuaPanel = document.querySelector('[data-panel="semua"]');
     var langsungPanel = document.querySelector('[data-panel="langsung"]');
+    var leagueEmptyPanel = document.querySelector('[data-panel="league-empty"]');
+
+    var currentFilter = 'semua';
+    var currentLeague = 'isc';
+
+    function render() {
+      if (currentLeague !== 'isc') {
+        semuaPanel.hidden = true;
+        langsungPanel.hidden = true;
+        leagueEmptyPanel.hidden = false;
+        return;
+      }
+      leagueEmptyPanel.hidden = true;
+      semuaPanel.hidden = currentFilter === 'langsung';
+      langsungPanel.hidden = currentFilter !== 'langsung';
+    }
 
     tabs.forEach(function (tab) {
       tab.addEventListener('click', function (e) {
         e.preventDefault();
         tabs.forEach(function (t) { t.classList.remove('active'); });
         tab.classList.add('active');
-        var filter = tab.getAttribute('data-filter');
+        currentFilter = tab.getAttribute('data-filter');
+        render();
+      });
+    });
 
-        panels.semua.hidden = filter === 'langsung';
-        langsungPanel.hidden = filter !== 'langsung';
+    leagueTabs.forEach(function (tab) {
+      tab.addEventListener('click', function (e) {
+        e.preventDefault();
+        leagueTabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        currentLeague = tab.getAttribute('data-league');
+        render();
       });
     });
   })();
@@ -408,7 +501,7 @@
     <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M3 17l4-9 4 6 4-9 4 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 20h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     Prizepool
   </a>
-  <a href="#">
+  <a href="leaderboard.html">
     <svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M4 20V10M12 20V4M20 20v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     Leaderboard
   </a>
