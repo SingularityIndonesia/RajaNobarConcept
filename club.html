@@ -37,9 +37,34 @@
     position: relative;
   }
 
+  /* ---------- Force phone form factor on non-phone (wider) viewports ---------- */
+  @media (min-width: 481px) {
+    html {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 0%, #1c2b20, #05090a 70%);
+      overflow: hidden;
+    }
+    body {
+      width: 100%;
+      height: 100vh;
+      max-height: 60rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      border-radius: 2.4rem;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 40px 90px rgba(0, 0, 0, 0.55);
+      transform: translateZ(0);
+    }
+    body::-webkit-scrollbar { display: none; }
+  }
+
   a { color: inherit; text-decoration: none; }
   button { font: inherit; cursor: pointer; padding: 0; }
   img { max-width: 100%; }
+  [hidden] { display: none !important; }
 
   /* ---------- Top bar ---------- */
   .top-bar {
@@ -56,6 +81,14 @@
   }
   .top-bar .logo img { height: 1.6rem; width: auto; display: block; }
   .top-actions { display: flex; align-items: center; gap: 0.6rem; }
+  .signin-btn {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: var(--red); color: #fff;
+    font-size: 0.8rem; font-weight: 800;
+    padding: 0.55rem 1rem;
+    border-radius: 999px; border: none;
+    white-space: nowrap;
+  }
   .icon-btn {
     width: 2.3rem; height: 2.3rem; border-radius: 0.65rem;
     border: 1px solid var(--nav-line);
@@ -199,6 +232,86 @@
   .community-note h3 { font-size: 0.92rem; font-weight: 800; margin: 0 0 0.15rem; }
   .community-note p { font-size: 0.8rem; color: #b9c8bd; margin: 0; }
 
+  /* ---------- Login bottom sheet ---------- */
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 18, 9, 0.6);
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .sheet-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .login-sheet {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 100%);
+    width: 100%;
+    max-width: 480px;
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 1.4rem 1.4rem 0 0;
+    padding: 0.8rem 1.4rem calc(1.6rem + var(--safe-b));
+    z-index: 21;
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    text-align: center;
+  }
+  .sheet-overlay.open .login-sheet { transform: translate(-50%, 0); }
+
+  .login-sheet .grabber {
+    width: 2.4rem; height: 0.28rem;
+    background: var(--line);
+    border-radius: 999px;
+    margin: 0.4rem auto 1.3rem;
+  }
+  .login-sheet h2 { font-size: 1.25rem; font-weight: 800; margin: 0 0 0.5rem; }
+  .login-sheet p {
+    font-size: 0.88rem; color: var(--ink-muted);
+    margin: 0 0 1.6rem;
+  }
+  .google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    padding: 0.85rem 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    background: var(--paper);
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .profile-sheet-user {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.2rem 0 1.4rem;
+    text-align: left;
+  }
+  .profile-sheet-user img {
+    width: 3rem; height: 3rem; max-width: none; border-radius: 50%;
+    object-fit: cover; border: 1.5px solid var(--gold); flex-shrink: 0;
+  }
+  .profile-sheet-user .name { font-size: 1rem; font-weight: 800; }
+  .profile-sheet-user .email { font-size: 0.8rem; color: var(--ink-muted); }
+  .logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.2rem;
+    border: 1px solid var(--red);
+    border-radius: 0.75rem;
+    background: var(--paper);
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--red);
+  }
+
   /* ---------- Bottom tab bar ---------- */
   .tab-bar {
     position: fixed;
@@ -233,11 +346,30 @@
     <button class="icon-btn" type="button" aria-label="Cari">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
-    <button class="icon-btn avatar-btn" type="button" aria-label="Profil">
+    <button class="signin-btn" type="button" data-signin-btn data-open-login>Sign In</button>
+    <button class="icon-btn avatar-btn" type="button" aria-label="Profil" data-profile-btn>
       <img src="images/avatar-stefanus.png" alt="" style="width:2.3rem;height:2.3rem;max-width:none;border-radius:50%;object-fit:cover;border:1.5px solid var(--gold);flex-shrink:0;" />
     </button>
   </div>
 </header>
+
+<script>
+  (function () {
+    var KEY = 'isLoggedIn';
+    var signinBtn = document.querySelector('[data-signin-btn]');
+    var profileBtn = document.querySelector('[data-profile-btn]');
+    if (!signinBtn || !profileBtn) return;
+
+    function renderAuth() {
+      var loggedIn = localStorage.getItem(KEY) === 'true';
+      signinBtn.hidden = loggedIn;
+      profileBtn.hidden = !loggedIn;
+    }
+
+    window.__renderAuth = renderAuth;
+    renderAuth();
+  })();
+</script>
 
 <nav class="sub-nav">
   <a class="active" href="#">
@@ -313,6 +445,87 @@
     Klub
   </a>
 </nav>
+
+<div class="sheet-overlay" data-login-overlay>
+  <div class="login-sheet">
+    <div class="grabber"></div>
+    <h2>Login to Continue</h2>
+    <p>Masuk untuk melanjutkan menggunakan Raja Nobar.ID.</p>
+    <button class="google-btn" type="button" data-login-google>
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 009 18z"/>
+        <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.66 9c0-.59.1-1.17.29-1.7V4.97H.9A9 9 0 000 9c0 1.45.35 2.83.9 4.03l3.05-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.9 4.97l3.05 2.33C4.66 5.17 6.65 3.58 9 3.58z"/>
+      </svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var overlay = document.querySelector('[data-login-overlay]');
+    var googleBtn = document.querySelector('[data-login-google]');
+    if (!overlay || !googleBtn) return;
+
+    document.querySelectorAll('[data-open-login]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        overlay.classList.add('open');
+      });
+    });
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+
+    googleBtn.addEventListener('click', function () {
+      localStorage.setItem('isLoggedIn', 'true');
+      if (window.__renderAuth) window.__renderAuth();
+      overlay.classList.remove('open');
+    });
+  })();
+</script>
+
+<div class="sheet-overlay" data-profile-overlay>
+  <div class="login-sheet">
+    <div class="grabber"></div>
+    <div class="profile-sheet-user">
+      <img src="images/avatar-stefanus.png" alt="" />
+      <div>
+        <div class="name">Stefanus Ayudha</div>
+        <div class="email">stefanus.ayudha@gmail.com</div>
+      </div>
+    </div>
+    <button class="logout-btn" type="button" data-logout-btn>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Logout
+    </button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var profileBtn = document.querySelector('[data-profile-btn]');
+    var profileOverlay = document.querySelector('[data-profile-overlay]');
+    var logoutBtn = document.querySelector('[data-logout-btn]');
+    if (!profileBtn || !profileOverlay || !logoutBtn) return;
+
+    profileBtn.addEventListener('click', function () {
+      profileOverlay.classList.add('open');
+    });
+
+    profileOverlay.addEventListener('click', function (e) {
+      if (e.target === profileOverlay) profileOverlay.classList.remove('open');
+    });
+
+    logoutBtn.addEventListener('click', function () {
+      localStorage.removeItem('isLoggedIn');
+      if (window.__renderAuth) window.__renderAuth();
+      profileOverlay.classList.remove('open');
+    });
+  })();
+</script>
 
 </body>
 </html>
